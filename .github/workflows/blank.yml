@@ -1,0 +1,130 @@
+import React, { useState } from 'react';
+import { PieChart, Pie, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+
+const fullData = [
+  { name: "Yüksek teknolojili cam sera konstrüksiyonu", value: 956026.86 },
+  { name: "Difüze cam paneller", value: 358510.07 },
+  { name: "MONTAJ GİDERLERİ", value: 278841.17 },
+  { name: "Yükseltilmiş oluk sistemi (Gutter)", value: 239006.72 },
+  { name: "BEKLENMEYEN GİDERLER", value: 216500.25 },
+  { name: "İleri seviye ısı ve ışık kontrolü perdeleri", value: 169878.01 },
+  { name: "TAŞIMA ve LOJİSTİK EKİPMANLARI", value: 159337.81 },
+  { name: "Akıllı iklim kontrol sistemi", value: 159337.81 },
+  { name: "Sera içi sulama ve Gübreleme sistemi", value: 152465.57 },
+  { name: "Elektrik sistemi", value: 80543.67 },
+  { name: "Yardımcı Tesisler", value: 79668.91 },
+  { name: "İŞLETME SERMAYESİ", value: 79668.91 },
+  { name: "Fog sistemi", value: 69652.93 },
+  { name: "İki hizmet aracı ve Midibüs", value: 61825.46 },
+  { name: "GENEL GİDERLER", value: 43300.05 },
+  { name: "Co² Alt yapısı", value: 29664.72 },
+  { name: "Sera içi sulama ve gübreleme makinesi", value: 21553.63 },
+  { name: "ARAZİ DÜZENLEMESİ ve ALTYAPI", value: 15933.78 },
+  { name: "Yağmur suyu toplama ve geri dönüşüm sistemi", value: 16391.88 },
+  { name: "ETÜD ve PROJE GİDERLERİ", value: 11950.34 },
+  { name: "Sera içi sirkülasyon fan sistemi ve fanları", value: 10890.74 },
+  { name: "Kültür işleme arabaları", value: 6806.91 },
+  { name: "Hasat ve Akülü arabalar", value: 3402.66 },
+];
+
+const data = [
+  ...fullData.slice(0, 9),
+  { name: "Diğer", value: fullData.slice(9).reduce((sum, item) => sum + item.value, 0) },
+].sort((a, b) => b.value - a.value);
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82ca9d', '#ffc658', '#8dd1e1', '#a4de6c', '#d0ed57'];
+
+const formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+
+const ModernHarcamaDashboard = () => {
+  const [sortConfig, setSortConfig] = useState({ key: 'value', direction: 'descending' });
+
+  const sortedData = [...fullData].sort((a, b) => {
+    if (a[sortConfig.key] < b[sortConfig.key]) {
+      return sortConfig.direction === 'ascending' ? -1 : 1;
+    }
+    if (a[sortConfig.key] > b[sortConfig.key]) {
+      return sortConfig.direction === 'ascending' ? 1 : -1;
+    }
+    return 0;
+  });
+
+  const requestSort = (key) => {
+    let direction = 'ascending';
+    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  return (
+    <div className="p-6 bg-gray-100 min-h-screen">
+      <h1 className="text-3xl font-bold mb-6 text-gray-800">Proje Harcama Analizi</h1>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <div className="bg-white p-6 rounded-lg shadow-lg col-span-2">
+          <h2 className="text-xl font-semibold mb-4 text-gray-700">Harcama Dağılımı</h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+              >
+                {data.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip formatter={(value) => formatter.format(value)} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow-lg">
+          <h2 className="text-xl font-semibold mb-4 text-gray-700">Toplam Harcama</h2>
+          <p className="text-4xl font-bold text-blue-600">{formatter.format(fullData.reduce((sum, item) => sum + item.value, 0))}</p>
+          <p className="text-sm text-gray-500 mt-2">{fullData.length} harcama kalemi</p>
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow-lg col-span-3">
+          <h2 className="text-xl font-semibold mb-4 text-gray-700">En Yüksek 5 Harcama Kalemi</h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={data.slice(0, 5)}>
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip formatter={(value) => formatter.format(value)} />
+              <Bar dataKey="value" fill="#8884d8">
+                {data.slice(0, 5).map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+      <div className="bg-white p-6 rounded-lg shadow-lg overflow-x-auto">
+        <h2 className="text-xl font-semibold mb-4 text-gray-700">Detaylı Harcama Tablosu</h2>
+        <table className="min-w-full">
+          <thead>
+            <tr className="bg-gray-200">
+              <th className="px-4 py-2 cursor-pointer" onClick={() => requestSort('name')}>Harcama Kalemi</th>
+              <th className="px-4 py-2 cursor-pointer" onClick={() => requestSort('value')}>Tutar (USD)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sortedData.map((item, index) => (
+              <tr key={index} className={index % 2 === 0 ? 'bg-gray-100' : 'bg-white'}>
+                <td className="border px-4 py-2">{item.name}</td>
+                <td className="border px-4 py-2 text-right">{formatter.format(item.value)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+export default ModernHarcamaDashboard;
